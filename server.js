@@ -42,11 +42,15 @@ app.post('/create-checkout-session',cors(corsOptions), async (req, res) => {
       cancel_url: 'https://stripe-server-backend.onrender.com/cancel',
       metadata: { userID },
       line_items: [
-  {
-    price: 'price_1RgNZrPp4PBsdqwr2MlLPPko', // Replace with your actual Stripe price ID
-    quantity: 1,
-  },
+        {
+          price: 'price_1NZQh5IyNL1j4Abc123456', // Use your actual Price ID here
+          quantity: 1,
+        }
+      ],
     });
+    
+    
+    
 
     res.json({ url: session.url });
   } catch (err) {
