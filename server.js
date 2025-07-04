@@ -42,7 +42,7 @@ app.post('/create-checkout-session',cors(corsOptions), async (req, res) => {
       metadata: { userID },
       line_items: [
         {
-          price: 'price_1NZQh5IyNL1j4Abc123456', // Use your actual Price ID here
+          price: 'price_1RgNZrPp4PBsdqwr2MlLPPko', // Use your actual Price ID here
           quantity: 1,
         }
       ],
