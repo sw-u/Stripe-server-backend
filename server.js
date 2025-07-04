@@ -19,12 +19,11 @@ app.get('/', (req, res) => {
 });
 
 const corsOptions = {
-  origin: 'https://html-classic.itch.zone',
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type'],
-  credentials: false,
+  origin: ['https://html-classic.itch.zone'], // Use array if you want to support multiple origins
+  methods: 'GET,POST,OPTIONS',
 };
-app.options('*', cors(corsOptions)); // enable pre-flight for all routes
+
+app.use(cors(corsOptions)); // enable pre-flight for all routes
 
 
 // 🔁 Create Checkout Session
