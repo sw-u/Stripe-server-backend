@@ -18,20 +18,36 @@ app.get('/', (req, res) => {
   res.send('✅ Stripe backend is live');
 });
 
+const corsOptions = {
+  origin: 'https://html-classic.itch.zone',
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type'],
+  credentials: false,
+};
+app.options('*', cors(corsOptions)); // enable pre-flight for all routes
+
 
 // 🔁 Create Checkout Session
-app.post('/create-checkout-session', async (req, res) => {
+app.post('/create-checkout-session',cors(corsOptions), async (req, res) => {
   const { userID } = req.body;
 
-  const session = await stripe.checkout.sessions.create({
-    
-    mode: 'payment',
-    success_url: 'https://stripe-server-backend.onrender.com/success',
-    cancel_url: 'https://stripe-server-backend.onrender.com/cancel',
-    metadata: { userID },
-  });
+  if (!userID) {
+    return res.status(400).json({ error: "Missing userID" });
+  }
 
-  res.json({ url: session.url });
+ try {
+    const session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      success_url: 'https://stripe-server-backend.onrender.com/success',
+      cancel_url: 'https://stripe-server-backend.onrender.com/cancel',
+      metadata: { userID },
+    });
+
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error("❌ Stripe session error:", err.message);
+    res.status(500).json({ error: "Stripe session creation failed" });
+  }
 });
 
 // 🔁 Stripe Webhook (must use raw body)
