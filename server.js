@@ -14,6 +14,11 @@ app.use(express.static('public'));
 
 const unlockStatus = {}; // In-memory storage for demo: { userID: true }
 
+app.get('/', (req, res) => {
+  res.send('✅ Stripe backend is live');
+});
+
+
 // 🔁 Create Checkout Session
 app.post('/create-checkout-session', async (req, res) => {
   const { userID } = req.body;
