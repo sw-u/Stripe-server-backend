@@ -37,8 +37,8 @@ app.post('/create-checkout-session',cors(corsOptions), async (req, res) => {
  try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
-      success_url: 'https://stripe-server-backend.onrender.com/success',
-      cancel_url: 'https://stripe-server-backend.onrender.com/cancel',
+      success_url: 'https://stripe-server-backend.onrender.com/success.html',
+      cancel_url: 'https://stripe-server-backend.onrender.com/cancel.html',
       metadata: { userID },
       line_items: [
         {
