@@ -2,12 +2,15 @@ const express = require('express');
 const Stripe = require('stripe');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+require('dotenv').config();
 
 const app = express();
-const stripe = Stripe('sk_test_your_secret_key'); // Replace with your Stripe secret key
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // Replace with your Stripe secret key
+
 
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json()); 
+app.use(express.static('public'));
 
 const unlockStatus = {}; // In-memory storage for demo: { userID: true }
 
@@ -16,14 +19,10 @@ app.post('/create-checkout-session', async (req, res) => {
   const { userID } = req.body;
 
   const session = await stripe.checkout.sessions.create({
-    payment_method_types: ['card'],
-    line_items: [{
-      price: 'price_123', // Replace with your Stripe price ID
-      quantity: 1,
-    }],
+    
     mode: 'payment',
-    success_url: 'https://yourdomain.com/success',
-    cancel_url: 'https://yourdomain.com/cancel',
+    success_url: 'https://stripe-server-backend.onrender.com/success',
+    cancel_url: 'https://stripe-server-backend.onrender.com/cancel',
     metadata: { userID },
   });
 
@@ -32,7 +31,7 @@ app.post('/create-checkout-session', async (req, res) => {
 
 // 🔁 Stripe Webhook (must use raw body)
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const endpointSecret = 'whsec_...'; // Your Stripe webhook secret
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET; // Your Stripe webhook secret
   const sig = req.headers['stripe-signature'];
 
   let event;
