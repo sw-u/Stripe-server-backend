@@ -21,7 +21,7 @@ app.get('/', (req, res) => {
 
 
 // 🔁 Create Checkout Session
-app.post('/create-checkout-session',cors(corsOptions), async (req, res) => {
+app.post('/create-checkout-session', async (req, res) => {
   const { userID } = req.body;
 
   if (!userID) {
