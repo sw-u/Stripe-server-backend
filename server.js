@@ -18,12 +18,6 @@ app.get('/', (req, res) => {
   res.send('✅ Stripe backend is live');
 });
 
-const corsOptions = {
-  origin: ['https://html-classic.itch.zone'], // Use array if you want to support multiple origins
-  methods: 'GET,POST,OPTIONS',
-};
-
-app.use(cors(corsOptions)); // enable pre-flight for all routes
 
 
 // 🔁 Create Checkout Session
