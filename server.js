@@ -4,12 +4,14 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
+
+
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // Replace with your Stripe secret key
 
 
 app.use(cors());
-app.use(bodyParser.json()); 
+
 app.use(express.static('public'));
 
 const unlockStatus = {}; // In-memory storage for demo: { userID: true }
@@ -85,3 +87,4 @@ app.get('/card-status', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.use(bodyParser.json()); 
