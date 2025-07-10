@@ -7,14 +7,24 @@ require('dotenv').config();
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-// ✅ Middleware for everything EXCEPT webhook
+const unlockStatus = {}; // Demo in-memory
+
+// ✅ Middleware for JSON handling (for POST data)
 app.use(cors());
+app.use((req, res, next) => {
+  if (req.originalUrl === '/webhook') {
+    next(); // skip
+  } else {
+    bodyParser.json()(req, res, next); // apply json parser elsewhere
+  }
+}); // <-- must be here BEFORE routes that use req.body
 app.use(express.static('public'));
 
-// 💡 This handles JSON input for create-checkout-session etc.
-app.use(bodyParser.json());
+app.get('/', (req, res) => {
+  res.send('✅ Stripe backend is live');
+});
 
-// 🔁 Create Checkout Session
+// ✅ Checkout session
 app.post('/create-checkout-session', async (req, res) => {
   const { userID } = req.body;
 
@@ -43,7 +53,7 @@ app.post('/create-checkout-session', async (req, res) => {
   }
 });
 
-// ⚠️ SPECIAL CASE: Webhook uses raw body — must be declared LAST and SEPARATELY!
+// ✅ Stripe Webhook — placed LAST, uses raw body
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const sig = req.headers['stripe-signature'];
@@ -66,6 +76,7 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   res.sendStatus(200);
 });
 
+// ✅ Status check for Unity polling
 app.get('/card-status', (req, res) => {
   const userID = req.query.userID;
   const purchased = unlockStatus[userID] || false;
@@ -73,4 +84,4 @@ app.get('/card-status', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
