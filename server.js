@@ -4,23 +4,15 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 require('dotenv').config();
 
-
-
 const app = express();
-const stripe = Stripe(process.env.STRIPE_SECRET_KEY); // Replace with your Stripe secret key
+const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-
+// ✅ Middleware for everything EXCEPT webhook
 app.use(cors());
-
 app.use(express.static('public'));
 
-const unlockStatus = {}; // In-memory storage for demo: { userID: true }
-
-app.get('/', (req, res) => {
-  res.send('✅ Stripe backend is live');
-});
-
-
+// 💡 This handles JSON input for create-checkout-session etc.
+app.use(bodyParser.json());
 
 // 🔁 Create Checkout Session
 app.post('/create-checkout-session', async (req, res) => {
@@ -30,7 +22,7 @@ app.post('/create-checkout-session', async (req, res) => {
     return res.status(400).json({ error: "Missing userID" });
   }
 
- try {
+  try {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       success_url: 'https://stripe-server-backend.onrender.com/success.html',
@@ -38,14 +30,11 @@ app.post('/create-checkout-session', async (req, res) => {
       metadata: { userID },
       line_items: [
         {
-          price: 'price_1RgNZrPp4PBsdqwr2MlLPPko', // Use your actual Price ID here
+          price: 'price_1RgNZrPp4PBsdqwr2MlLPPko',
           quantity: 1,
         }
       ],
     });
-    
-    
-    
 
     res.json({ url: session.url });
   } catch (err) {
@@ -54,13 +43,12 @@ app.post('/create-checkout-session', async (req, res) => {
   }
 });
 
-// 🔁 Stripe Webhook (must use raw body)
+// ⚠️ SPECIAL CASE: Webhook uses raw body — must be declared LAST and SEPARATELY!
 app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET; // Your Stripe webhook secret
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const sig = req.headers['stripe-signature'];
 
   let event;
-
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
   } catch (err) {
@@ -78,7 +66,6 @@ app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
   res.sendStatus(200);
 });
 
-// 🔁 Check unlock status
 app.get('/card-status', (req, res) => {
   const userID = req.query.userID;
   const purchased = unlockStatus[userID] || false;
@@ -87,4 +74,3 @@ app.get('/card-status', (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
-app.use(bodyParser.json()); 
