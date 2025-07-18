@@ -40,7 +40,7 @@ app.post('/create-checkout-session', async (req, res) => {
       metadata: { userID },
       line_items: [
         {
-          price: 'price_1Rlsj6Pp4PBsdqwrfsYUBI24',  //price ID
+          price: 'price_1RmEBCPGqi2HuONzPmscbqGd',  //price ID
           quantity: 1,
         }
       ],
