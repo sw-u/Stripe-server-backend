@@ -23,6 +23,9 @@ app.use((req, res, next) => {
 
 app.use(cors());
 app.use(express.static('public'));
+app.get('/', (req, res) => {
+  res.send('✅ Stripe backend is running!');
+});
 // ✅ Checkout session
 app.post('/create-checkout-session', async (req, res) => {
   const { userID } = req.body;
