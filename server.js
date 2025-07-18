@@ -1,29 +1,28 @@
 const express = require('express');
 const Stripe = require('stripe');
 const cors = require('cors');
-const bodyParser = require('body-parser');
 require('dotenv').config();
 
 const app = express();
 const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 
-const unlockStatus = {}; // Demo in-memory
+// ✅ In-memory storage for game unlocks
+const unlockStatus = {};
 
-// ✅ Middleware for JSON handling (for POST data)
-app.use(cors());
+// ✅ 1. Raw body middleware for Stripe webhook (must come before anything else)
+app.post('/webhook', express.raw({ type: 'application/json' }));
+
+// ✅ 2. Apply JSON middleware AFTER raw webhook handler
 app.use((req, res, next) => {
   if (req.originalUrl === '/webhook') {
-    next(); // skip
+    next(); // skip parsing
   } else {
-    bodyParser.json()(req, res, next); // apply json parser elsewhere
+    express.json()(req, res, next); // parse JSON for everything else
   }
-}); // <-- must be here BEFORE routes that use req.body
-app.use(express.static('public'));
-
-app.get('/', (req, res) => {
-  res.send('✅ Stripe backend is live');
 });
 
+app.use(cors());
+app.use(express.static('public'));
 // ✅ Checkout session
 app.post('/create-checkout-session', async (req, res) => {
   const { userID } = req.body;
@@ -54,23 +53,27 @@ app.post('/create-checkout-session', async (req, res) => {
 });
 
 // ✅ Stripe Webhook — placed LAST, uses raw body
-app.post('/webhook', express.raw({ type: 'application/json' }), (req, res) => {
-  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+app.post('/webhook', (req, res) => {
   const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  console.log('📡 Webhook triggered');
+  console.log('📦 req.body is buffer?', Buffer.isBuffer(req.body)); // Must be true
 
   let event;
   try {
     event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+    console.log('✅ Webhook verified:', event.type);
   } catch (err) {
-    console.log('Webhook signature verification failed.');
-    return res.sendStatus(400);
+    console.error('❌ Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
   }
 
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object;
     const userID = session.metadata.userID;
     unlockStatus[userID] = true;
-    console.log(`✅ Purchase complete for userID: ${userID}`);
+    console.log(`🎉 Purchase completed for userID: ${userID}`);
   }
 
   res.sendStatus(200);
